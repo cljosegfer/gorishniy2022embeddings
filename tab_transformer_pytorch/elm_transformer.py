@@ -98,29 +98,17 @@ class Transformer(nn.Module):
 
 # numerical embedder
 
-class NumericalEmbedder(nn.Module):
-    def __init__(self, dim, num_numerical_types):
-        super().__init__()
-        self.weights = nn.Parameter(torch.randn(num_numerical_types, dim))
-        self.biases = nn.Parameter(torch.randn(num_numerical_types, dim))
-
-    def forward(self, x):
-        x = rearrange(x, 'b n -> b n 1')
-        return x * self.weights + self.biases
-
 class elm(nn.Module):
     def __init__(self, dim, num_numerical_types):
         super().__init__()
-        # self.B = torch.randn(1, dim, num_numerical_types).cuda()
         self.B = nn.Parameter(torch.randn(1, dim, num_numerical_types))
 
     def forward(self, x):
         return torch.transpose(torch.sigmoid(x.unsqueeze(1) + self.B), dim0 = 1, dim1 = 2)
 
-
 # main class
 
-class FTTransformer(nn.Module):
+class elm_transformer(nn.Module):
     def __init__(
         self,
         *,
@@ -158,15 +146,14 @@ class FTTransformer(nn.Module):
 
             # categorical embedding
 
-            self.categorical_embeds = nn.Embedding(total_tokens, dim)
+            self.categorical_embeds = nn.elm(total_tokens, dim)
 
         # continuous
 
         self.num_continuous = num_continuous
 
         if self.num_continuous > 0:
-            # self.numerical_embedder = NumericalEmbedder(dim, self.num_continuous)
-            self.numerical_embedder = elm(dim, self.num_continuous)
+            self.numerical_embedder = NumericalEmbedder(dim, self.num_continuous)
 
         # cls token
 
